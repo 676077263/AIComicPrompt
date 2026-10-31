@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 漫剧提示词工作台 — 一键产出即梦可直接出片的分镜提示词</title>
+<meta name="description" content="给一个标题或简介，自动产出逐镜 5/10/15 秒、可直接在即梦（Seedance）出片的分镜提示词与即梦导出包。Windows 桌面工具，安装即用。">
+<style>
+  :root {
+    --bg: #0b0714; --bg2: #120a1f; --card: #170f28; --card2: #1d1333;
+    --border: #2c1f47; --text: #e9e4f5; --muted: #9c92b8;
+    --accent: #a855f7; --accent2: #ec4899; --accent3: #22d3ee;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: "Segoe UI", "Microsoft YaHei", "PingFang SC", sans-serif;
+    line-height: 1.7; overflow-x: hidden;
+  }
+  a { color: inherit; text-decoration: none; }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+
+  /* nav */
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(11,7,20,.82); backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-inner { display: flex; align-items: center; gap: 28px; height: 62px; }
+  .logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 17px; }
+  .logo-dot {
+    width: 26px; height: 26px; border-radius: 8px; flex: none;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    box-shadow: 0 0 14px rgba(168,85,247,.55);
+  }
+  .nav-links { display: flex; gap: 22px; margin-left: auto; font-size: 14.5px; color: var(--muted); }
+  .nav-links a:hover { color: var(--text); }
+  .nav-cta {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    padding: 8px 18px; border-radius: 999px; font-size: 14px; font-weight: 600; color: #fff;
+  }
+
+  /* hero */
+  .hero { padding: 84px 0 40px; text-align: center; position: relative; }
+  .hero::before {
+    content: ""; position: absolute; inset: -40% 20% auto; height: 520px;
+    background: radial-gradient(ellipse at center, rgba(168,85,247,.16), transparent 65%);
+    pointer-events: none;
+  }
+  .badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    border: 1px solid var(--border); background: var(--card);
+    color: var(--muted); font-size: 13px; padding: 6px 16px; border-radius: 999px; margin-bottom: 26px;
+  }
+  .badge b { color: var(--accent3); font-weight: 600; }
+  h1 {
+    font-size: clamp(30px, 5.4vw, 52px); line-height: 1.25; font-weight: 800; letter-spacing: .5px;
+  }
+  .grad {
+    background: linear-gradient(100deg, #c084fc 0%, #ec4899 55%, #f472b6 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .hero p.sub {
+    max-width: 720px; margin: 20px auto 0; color: var(--muted); font-size: 17px;
+  }
+  .hero .cta-row { display: flex; gap: 16px; justify-content: center; margin-top: 34px; flex-wrap: wrap; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 9px;
+    padding: 13px 30px; border-radius: 12px; font-size: 16px; font-weight: 700;
+    transition: transform .15s ease, box-shadow .15s ease;
+  }
+  .btn:hover { transform: translateY(-2px); }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff;
+    box-shadow: 0 8px 28px rgba(168,85,247,.4);
+  }
+  .btn-ghost { border: 1px solid var(--border); background: var(--card); color: var(--text); }
+  .cta-note { margin-top: 14px; font-size: 13px; color: var(--muted); }
+
+  /* screenshot */
+  .shot { margin: 56px auto 0; max-width: 980px; }
+  .shot img {
+    width: 100%; border-radius: 16px; border: 1px solid var(--border);
+    box-shadow: 0 24px 70px rgba(0,0,0,.55); display: block;
+  }
+  .shot figcaption { text-align: center; color: var(--muted); font-size: 13.5px; margin-top: 14px; }
+
+  /* sections */
+  section { padding: 76px 0; }
+  .sec-head { text-align: center; margin-bottom: 48px; }
+  .sec-head h2 { font-size: clamp(24px, 3.4vw, 34px); font-weight: 800; }
+  .sec-head p { color: var(--muted); margin-top: 12px; max-width: 640px; margin-left: auto; margin-right: auto; }
+
+  /* pipeline */
+  .pipeline { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+  .step {
+    display: flex; gap: 16px; background: var(--card); border: 1px solid var(--border);
+    border-radius: 14px; padding: 20px; transition: border-color .2s;
+  }
+  .step:hover { border-color: #4c3a78; }
+  .step-num {
+    flex: none; width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center;
+    font-weight: 800; font-size: 15px; color: #fff;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+  }
+  .step h3 { font-size: 16.5px; margin-bottom: 5px; }
+  .step p { color: var(--muted); font-size: 14px; }
+
+  /* features */
+  .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+  .feat {
+    background: linear-gradient(180deg, var(--card2), var(--card));
+    border: 1px solid var(--border); border-radius: 14px; padding: 24px;
+  }
+  .feat .ico { font-size: 26px; margin-bottom: 12px; }
+  .feat h3 { font-size: 17px; margin-bottom: 8px; }
+  .feat h3 em { font-style: normal; color: var(--accent3); }
+  .feat p { color: var(--muted); font-size: 14.2px; }
+
+  /* gallery */
+  .gallery { display: grid; gap: 22px; }
+  .gallery figure img {
+    width: 100%; border-radius: 14px; border: 1px solid var(--border);
+    box-shadow: 0 18px 50px rgba(0,0,0,.5); display: block;
+  }
+  .gallery figcaption { text-align: center; color: var(--muted); font-size: 13.5px; margin-top: 12px; }
+
+  /* download */
+  .dl-card {
+    background: linear-gradient(135deg, rgba(168,85,247,.12), rgba(236,72,153,.10));
+    border: 1px solid #3d2a63; border-radius: 20px; padding: 44px 32px; text-align: center;
+  }
+  .dl-card h2 { font-size: clamp(24px, 3.4vw, 32px); font-weight: 800; }
+  .dl-card p { color: var(--muted); margin-top: 12px; }
+  .dl-req {
+    display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin-top: 26px;
+  }
+  .dl-req span {
+    border: 1px solid var(--border); background: var(--card); color: var(--muted);
+    font-size: 13.5px; padding: 7px 16px; border-radius: 999px;
+  }
+  .dl-note {
+    max-width: 640px; margin: 24px auto 0; text-align: left;
+    background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+    padding: 16px 20px; font-size: 14px; color: var(--muted);
+  }
+  .dl-note b { color: var(--accent3); }
+
+  footer { border-top: 1px solid var(--border); padding: 36px 0 44px; color: var(--muted); font-size: 14px; }
+  .foot-inner { display: flex; justify-content: space-between; gap: 18px; flex-wrap: wrap; align-items: center; }
+  footer a { color: var(--accent3); }
+  @media (max-width: 640px) { .nav-links { display: none; } }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap nav-inner">
+    <a class="logo" href="#"><span class="logo-dot"></span>AI 漫剧提示词工作台</a>
+    <div class="nav-links">
+      <a href="#pipeline">工作流程</a>
+      <a href="#features">核心特性</a>
+      <a href="#gallery">界面一览</a>
+      <a href="https://www.glgxt.cn" target="_blank" rel="noopener">官方网站</a>
+    </div>
+    <a class="nav-cta" href="https://github.com/676077263/AIComicPrompt/releases/latest" target="_blank" rel="noopener">免费下载</a>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap">
+    <span class="badge">Windows 桌面工具 · <b>安装即用</b> · 面向即梦（Seedance）出片链路</span>
+    <h1>给一个标题，产出<span class="grad">可直接出片的分镜提示词</span></h1>
+    <p class="sub">AI 漫剧提示词工作台打通「文生图出首帧 → 图生视频出动作」全链路：自动拆解分镜、装配宫格提示词、导出即梦包，每镜 5 / 10 / 15 秒，连贯性告警与一键复制内置。</p>
+    <div class="cta-row">
+      <a class="btn btn-primary" href="https://github.com/676077263/AIComicPrompt/releases/latest" target="_blank" rel="noopener">⬇ 下载 Windows 安装包</a>
+      <a class="btn btn-ghost" href="https://www.glgxt.cn" target="_blank" rel="noopener">访问作者官网 ↗</a>
+    </div>
+    <p class="cta-note">免费使用 · 需自备模型 API Key（支持千帆 / DeepSeek / 智谱 / Kimi 等主流厂商）</p>
+    <figure class="shot">
+      <img src="docs/ui_shotcards.png" alt="AI 漫剧提示词工作台主界面：分镜提示词卡片视图">
+      <figcaption>分镜卡视图：每镜文生图 / 图生视频双提示词、时长龙骨彩条与宫格首帧</figcaption>
+    </figure>
+  </div>
+</header>
+
+<section id="pipeline">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2>六步流水线，从一句话到成片素材</h2>
+      <p>左侧流水线依次走完，每一步的产物直接进入下一步，长剧本自动分批、分镜前自动补人物蓝图。</p>
+    </div>
+    <div class="pipeline">
+      <div class="step"><span class="step-num">1</span><div><h3>故事大纲</h3><p>填标题 / 简介 / 短文，选篇幅、题材、画风，生成故事框架。</p></div></div>
+      <div class="step"><span class="step-num">2</span><div><h3>剧本</h3><p>由大纲拆解分场剧本：场景、出场、行动、对白、转折。</p></div></div>
+      <div class="step"><span class="step-num">3</span><div><h3>导演化分镜</h3><p>一次直出分镜：每镜 5/10/15 秒、2-4 切宫格、运镜与因果链。</p></div></div>
+      <div class="step"><span class="step-num">4</span><div><h3>素材</h3><p>提取角色 / 场景 / 道具并生成设定图：立绘 3:4、空镜 16:9、特写 1:1。</p></div></div>
+      <div class="step"><span class="step-num">5</span><div><h3>装配提示词</h3><p>本地纯程序拼接，秒级完成：每镜 image_prompt + video_prompt。</p></div></div>
+      <div class="step"><span class="step-num">6</span><div><h3>出图 / 出片</h3><p>宫格首帧自动裁切，一键导出即梦「首尾帧版 / 全能参考版」导出包。</p></div></div>
+    </div>
+  </div>
+</section>
+
+<section id="features" style="background: var(--bg2); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2>为「不跳戏」而生核心特性</h2>
+      <p>围绕即梦官方能力深度对齐：@图片N 引用语法、首尾帧 / 全能参考两入口、整张宫格 multi-grid 分镜、4-15 秒时长。</p>
+    </div>
+    <div class="features">
+      <div class="feat"><div class="ico">▦</div><h3>宫格分镜 <em>multi-grid</em></h3><p>默认一镜一张 2×2 宫格（2-4 切），即梦 2.0 / mini 人物一致性最稳的密度；出图后自动按行优先裁出每切。</p></div>
+      <div class="feat"><div class="ico">⇆</div><h3>首尾帧版导出</h3><p>同场相邻镜尾帧 = 下一镜首切，动接动无缝拼接；换场自动定场收尾，绝不提前穿帮。</p></div>
+      <div class="feat"><div class="ico">🎯</div><h3>全能参考版锁脸</h3><p>@图片N 按上传顺序映射整宫格、角色立绘、场景图与尾帧，全程锁脸锁场景；「图片快捷分类」自动整理上传清单。</p></div>
+      <div class="feat"><div class="ico">✓</div><h3>零 LLM 连贯性校验</h3><p>因果链、定场、入场、机位、对白容量、切数上限等 8 类问题逐镜检查，标红提示复核，不烧一点 Token。</p></div>
+      <div class="feat"><div class="ico">⏱</div><h3>时长自动适配</h3><p>按对白字数自动升档 5 → 10 → 15 秒，宁可画面留白也不压台词；长剧本按章 / 场边界自动分批。</p></div>
+      <div class="feat"><div class="ico">🔌</div><h3>厂商自由接入</h3><p>统一 OpenAI 兼容协议，内置千帆、DeepSeek、智谱 GLM、Kimi、百炼、硅基流动、火山方舟等预设，也可新增任意兼容厂商。</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="gallery">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2>界面一览</h2>
+    </div>
+    <div class="gallery">
+      <figure>
+        <img src="docs/ui_assets.png" alt="素材库：角色 / 场景 / 道具设定图管理">
+        <figcaption>素材库：分镜后自动提取角色、场景、道具，生成设定图提示词并管理出图</figcaption>
+      </figure>
+      <figure>
+        <img src="docs/ui_jimeng.png" alt="即梦导出包：@图片N 顺序映射与上传清单">
+        <figcaption>即梦导出包：首尾帧版 / 全能参考版双模式，@图片N 与真实文件名一一对照</figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<section id="download">
+  <div class="wrap">
+    <div class="dl-card">
+      <h2>立即下载</h2>
+      <p>单文件安装包，双击安装，默认装到用户目录，无需管理员权限。</p>
+      <div class="cta-row" style="display:flex; gap:16px; justify-content:center; margin-top:28px; flex-wrap:wrap;">
+        <a class="btn btn-primary" href="https://github.com/676077263/AIComicPrompt/releases/latest" target="_blank" rel="noopener">⬇ 前往 Releases 下载</a>
+      </div>
+      <div class="dl-req">
+        <span>Windows 10 / 11（64 位）</span><span>安装包约 400 MB</span><span>内置 Python 运行时，免配置</span><span>使用时需联网</span>
+      </div>
+      <div class="dl-note">
+        <b>首次使用须知：</b>软件不内置任何模型 API Key。请在「设置 → 接口配置」中选择模型厂商并填写<b>你自己的 API Key</b>，点击「测试连接」确认灯变绿后即可开始创作。
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap foot-inner">
+    <div>© 2026 AI 漫剧提示词工作台 · 保留所有权利</div>
+    <div>教程 / 案例 / 更新：<a href="https://www.glgxt.cn" target="_blank" rel="noopener">www.glgxt.cn</a></div>
+  </div>
+</footer>
+
+</body>
+</html>
