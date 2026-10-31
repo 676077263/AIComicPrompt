@@ -11,7 +11,9 @@
 
 ## 下载安装
 
-1. 前往 [**Releases**](https://github.com/676077263/AIComicPrompt/releases/latest) 页面，下载 `AIComicPromptInstaller.exe`（约 300 MB，单文件安装包）。
+1. 下载 `AIComicPromptInstaller.exe`（约 400 MB，单文件安装包）：
+   - **城通网盘（推荐）**：[AIComicPromptInstaller.exe](https://url.ctfile.com/f/8179032-17569909525873-aa3be1?p=3996)（访问密码：3996，链接已自动填充）
+   - **GitHub Releases（备用）**：[前往 Releases 页面](https://github.com/676077263/AIComicPrompt/releases/latest)
 2. 双击运行，按提示完成安装。
 3. 从桌面或开始菜单启动「AI 漫剧提示词工作台」。
 
